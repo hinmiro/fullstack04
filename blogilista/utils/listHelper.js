@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 const dummy = (blogs) => {
   return 1;
 };
@@ -18,4 +20,22 @@ const favoriteBlog = (blogs) => {
   }, blogs[0]);
 };
 
-export { dummy, totalLikes, favoriteBlog };
+const mostBlogs = (blogs) => {
+  const authors = _.countBy(blogs, 'author');
+  const mostBlogsAuthor = _.maxBy(_.keys(authors), (author) => authors[author]);
+  return {
+    author: mostBlogsAuthor,
+    blogs: authors[mostBlogsAuthor],
+  };
+};
+
+const mostLikes = (blogs) => {
+  const group = _.groupBy(blogs, 'author');
+  const authorLikes = _.map(group, (blogs, author) => ({
+    author,
+    likes: _.sumBy(blogs, 'likes'),
+  }));
+  return _.maxBy(authorLikes, 'likes');
+};
+
+export { dummy, totalLikes, favoriteBlog, mostBlogs, mostLikes };
