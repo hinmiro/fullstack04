@@ -3,16 +3,23 @@ import mongoose from 'mongoose';
 
 mongoose.set('strictQuery', false);
 
-const url = process.env.MONGO_URI;
+const url =
+  process.env.NODE_ENV === 'test'
+    ? process.env.TEST_MONGO_URI
+    : process.env.MONGO_URI;
 
-mongoose
-  .connect(url)
-  .then((result) => {
+const connectMongo = async () => {
+  try {
+    await mongoose.connect(url);
     console.log('Connected to Mongo database');
-  })
-  .catch((err) => {
-    console.log('Error connecting to Mongo database: ', err.message);
-  });
+  } catch (err) {
+    throw err;
+  }
+};
+
+connectMongo().catch((err) => {
+  console.log('Error connecting to Mongo database: ', err.message);
+});
 
 const blogSchema = new mongoose.Schema({
   title: String,

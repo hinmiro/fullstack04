@@ -1,9 +1,7 @@
 import Blog from '../services/mongoDb.js';
 
-const getBlogs = () => {
-  return Blog.find({}).then((res) => {
-    return res;
-  });
+const getBlogs = async () => {
+  return Blog.find({});
 };
 
 const createBlog = async ({ title, author, url, likes }) => {
@@ -13,16 +11,12 @@ const createBlog = async ({ title, author, url, likes }) => {
     url: url,
     likes: likes,
   });
-  return blog
-    .save()
-    .then((res) => {
-      console.log(`Added new blog ${title} from ${author}`);
-      return 201;
-    })
-    .catch((err) => {
-      console.log('Post error: ', err.message);
-      return 400;
-    });
+  const response = await blog.save().catch((err) => {
+    console.log('Post error: ', err.message);
+    return 400;
+  });
+  console.log(`Added new blog ${response.title} from ${response.author}`);
+  return 201;
 };
 
 export { getBlogs, createBlog };
