@@ -19,6 +19,17 @@ test('get all blogs from server', async () => {
   console.log('\n*** TEST COMPLETE ***');
 });
 
+test('blog identify field is id, not_id', async () => {
+  const result = await api.get('/api/blogs').expect(200);
+
+  assert.strictEqual(
+    result._body[0].hasOwnProperty('id'),
+    true,
+    `Test failed object id is _id`,
+  );
+  console.log('\n*** TEST COMPLETE ***');
+});
+
 after(async () => {
   await mongoose.connection.close();
 });
