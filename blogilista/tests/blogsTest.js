@@ -51,6 +51,8 @@ test('newly created blog is in database', async () => {
   console.log('\n*** TEST COMPLETE ***');
 });
 
+test('if blog has no likes it should be 0', () => {});
+
 after(async () => {
   await mongoose.connection.close();
 });
