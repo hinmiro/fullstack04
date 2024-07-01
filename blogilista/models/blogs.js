@@ -22,4 +22,12 @@ const createBlog = async ({ title, author, url, likes = 0 }) => {
   return 201;
 };
 
-export { getBlogs, createBlog };
+const deleteBlog = async (id) => {
+  const response = await Blog.findByIdAndDelete(id).catch((err) => {
+    console.log('Delete error: ', err.message);
+    return 400;
+  });
+  return 200;
+};
+
+export { getBlogs, createBlog, deleteBlog };

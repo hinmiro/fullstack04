@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getBlogs, createBlog } from './models/blogs.js';
+import { getBlogs, createBlog, deleteBlog } from './models/blogs.js';
 
 const app = express();
 
@@ -22,6 +22,15 @@ app.post('/api/blogs', async (request, response) => {
     return response.sendStatus(201);
   } else if (result === 400) {
     return response.sendStatus(400);
+  }
+});
+
+app.delete('/api/blogs/:id', async (req, res) => {
+  const result = await deleteBlog(req.params.id);
+  if (result === 200) {
+    return res.sendStatus(200);
+  } else {
+    return res.sendStatus(400);
   }
 });
 

@@ -73,6 +73,14 @@ test('If new blog has no title or url, send 400 Bad request', async () => {
   await api.post('/api/blogs').send(blog).expect(400);
 });
 
+test('delete blog actually deletes blog', async () => {
+  const blogsLen = await Blog.countDocuments();
+  const blogs = await api.get('/api/blogs').expect(200);
+  await api.delete(`/api/blogs/${blogs._body[blogsLen - 1].id}`).expect(200);
+  const newLen = await Blog.countDocuments();
+  assert.strictEqual(newLen, blogsLen - 1, 'Deleting blog is faulty');
+});
+
 after(async () => {
   await mongoose.connection.close();
   console.log('\n*** TESTING COMPLETE ***');
