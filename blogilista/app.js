@@ -19,8 +19,8 @@ app.get('/api/blogs', async (req, res) => {
 app.post('/api/blogs', async (request, response) => {
   const result = await createBlog(request.body);
   if (result === 201) {
-    return response.status(201).json({ message: 'New blog added' });
-  } else {
+    return response.sendStatus(201);
+  } else if (result === 400) {
     return response.sendStatus(400);
   }
 });
