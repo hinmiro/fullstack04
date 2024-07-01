@@ -9,7 +9,7 @@ const createBlog = async ({ title, author, url, likes }) => {
     title: title,
     author: author,
     url: url,
-    likes: likes,
+    likes: likes || 0,
   });
   const response = await blog.save().catch((err) => {
     console.log('Post error: ', err.message);

@@ -51,7 +51,29 @@ test('newly created blog is in database', async () => {
   console.log('\n*** TEST COMPLETE ***');
 });
 
-test('if blog has no likes it should be 0', () => {});
+test('if blog has no likes it should be 0', async () => {
+  const createBlog = (title, author, url, likes) => {
+    return new Blog({
+      title: title,
+      author: author,
+      url: url,
+      likes: likes || 0,
+    });
+  };
+
+  const blog = createBlog('Pitsapohja', 'Luigi', 'www.luigit.xxx');
+
+  const result = await blog.save();
+  const response = await Blog.findById(result._id);
+  result.likes < 1
+    ? assert.strictEqual(
+        response.likes,
+        0,
+        `Likes supposed to be zero not ${response.likes}`,
+      )
+    : assert.strictEqual(blog.likes, response.likes, `Likes dont match!`);
+  console.log('Test success!');
+});
 
 after(async () => {
   await mongoose.connection.close();
