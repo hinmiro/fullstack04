@@ -1,4 +1,5 @@
 import Blog from '../services/mongoDb.js';
+import { json } from 'express';
 
 const getBlogs = async () => {
   return Blog.find({});
@@ -30,4 +31,16 @@ const deleteBlog = async (id) => {
   return 200;
 };
 
-export { getBlogs, createBlog, deleteBlog };
+const updateLikes = async (id, body) => {
+  const response = await Blog.findByIdAndUpdate(
+    id,
+    { likes: body.likes },
+    { new: true },
+  ).catch((err) => {
+    console.log('Error has occured: ', err.message);
+    return 400;
+  });
+  return 200;
+};
+
+export { getBlogs, createBlog, deleteBlog, updateLikes };

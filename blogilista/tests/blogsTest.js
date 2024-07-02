@@ -81,6 +81,25 @@ test('delete blog actually deletes blog', async () => {
   assert.strictEqual(newLen, blogsLen - 1, 'Deleting blog is faulty');
 });
 
+test('adding likes to blog', async () => {
+  const blogs = await api.get('/api/blogs').expect(200);
+  const blogToUpdate = blogs._body[0];
+  const updatedLikes = { likes: blogToUpdate.likes + 1 };
+
+  const result = await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(updatedLikes)
+    .expect(200);
+
+  const updatedBlogFromDb = await Blog.findById(blogToUpdate.id);
+
+  assert.strictEqual(
+    updatedBlogFromDb.likes,
+    blogToUpdate.likes + 1,
+    'Likes did not update',
+  );
+});
+
 after(async () => {
   await mongoose.connection.close();
   console.log('\n*** TESTING COMPLETE ***');
