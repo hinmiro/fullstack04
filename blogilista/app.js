@@ -1,53 +1,36 @@
 import express from 'express';
 import cors from 'cors';
-import {
-  getBlogs,
-  createBlog,
-  deleteBlog,
-  updateLikes,
-} from './models/blogs.js';
+import usersRouter from './controllers/users.js';
+import blogRouter from './controllers/blogs.js';
+import mongoose from 'mongoose';
+import 'dotenv/config';
 
 const app = express();
 
+const url =
+  process.env.NODE_ENV === 'test'
+    ? process.env.TEST_MONGO_URI
+    : process.env.MONGO_URI;
+
+mongoose.set('strictQuery', false);
+
+const connectMongo = async () => {
+  try {
+    await mongoose.connect(url);
+    console.log('Connected to Mongo database');
+  } catch (err) {
+    throw err;
+  }
+};
+
+connectMongo().catch((err) => {
+  console.log('Error connecting to Mongo database: ', err.message);
+});
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Blog rest api');
-});
-
-app.get('/api/blogs', async (req, res) => {
-  res.status(200).json(await getBlogs());
-});
-
-app.post('/api/blogs', async (request, response) => {
-  const result = await createBlog(request.body);
-  if (result === 201) {
-    return response.sendStatus(201);
-  } else if (result === 400) {
-    return response.sendStatus(400);
-  }
-});
-
-app.delete('/api/blogs/:id', async (req, res) => {
-  const result = await deleteBlog(req.params.id);
-  if (result === 200) {
-    return res.sendStatus(200);
-  } else {
-    return res.sendStatus(400);
-  }
-});
-
-app.put('/api/blogs/:id', async (req, res) => {
-  const body = req.body;
-  const result = await updateLikes(req.params.id, body);
-
-  if (result === 200) {
-    return res.sendStatus(200);
-  } else {
-    return res.sendStatus(400);
-  }
-});
+app.use('/api/users', usersRouter);
+app.use('/api/blogs', blogRouter);
 
 export default app;

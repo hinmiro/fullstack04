@@ -6,7 +6,9 @@ import supertest from 'supertest';
 process.env.NODE_ENV = 'test';
 
 import app from '../app.js';
-import Blog from '../services/mongoDb.js';
+import Blog from '../models/blogs.js';
+import User from '../models/user.js';
+import Users from '../controllers/users.js';
 
 const api = supertest(app);
 
@@ -30,7 +32,23 @@ test('get all blogs from server', async () => {
 });
 
 test('blog identify field is id, not_id', async () => {
-  const result = await api.get('/api/blogs').expect(200);
+  const user = new User({
+    username: 'USERI',
+    name: 'USHERUi',
+    password: 'ASDASDKJASFIWP#RJ',
+  });
+  const savedUser = await user.save();
+
+  const blog = new Blog({
+    title: 'Testeri',
+    author: 'Testinki',
+    url: 'www.teetetete.xyx',
+    user: savedUser._id,
+  });
+
+  const savedBlog = await blog.save();
+
+  const result = await api.get(`/api/blogs`).expect(200);
 
   assert.strictEqual(
     result._body[0].hasOwnProperty('id'),

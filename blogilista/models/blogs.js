@@ -1,46 +1,22 @@
-import Blog from '../services/mongoDb.js';
-import { json } from 'express';
+import mongoose from 'mongoose';
 
-const getBlogs = async () => {
-  return Blog.find({});
-};
+const blogSchema = new mongoose.Schema({
+  title: String,
+  author: String,
+  url: String,
+  likes: Number,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+});
 
-const createBlog = async ({ title, author, url, likes = 0 }) => {
-  if (!title || !url) {
-    return 400;
-  }
+blogSchema.set('toJSON', {
+  transform: (document, returnedObj) => {
+    returnedObj.id = returnedObj._id.toString();
+    delete returnedObj._id;
+    delete returnedObj.__v;
+  },
+});
 
-  const blog = new Blog({
-    title: title,
-    author: author,
-    url: url,
-    likes: likes,
-  });
-  const response = await blog.save().catch((err) => {
-    console.log('Post error: ', err.message);
-    return 400;
-  });
-  return 201;
-};
-
-const deleteBlog = async (id) => {
-  const response = await Blog.findByIdAndDelete(id).catch((err) => {
-    console.log('Delete error: ', err.message);
-    return 400;
-  });
-  return 200;
-};
-
-const updateLikes = async (id, body) => {
-  const response = await Blog.findByIdAndUpdate(
-    id,
-    { likes: body.likes },
-    { new: true },
-  ).catch((err) => {
-    console.log('Error has occured: ', err.message);
-    return 400;
-  });
-  return 200;
-};
-
-export { getBlogs, createBlog, deleteBlog, updateLikes };
+export default mongoose.model('Blog', blogSchema);
