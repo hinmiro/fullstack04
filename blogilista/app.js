@@ -4,6 +4,7 @@ import usersRouter from './controllers/users.js';
 import blogRouter from './controllers/blogs.js';
 import mongoose from 'mongoose';
 import 'dotenv/config';
+import loginRouter from './controllers/login.js';
 
 const app = express();
 
@@ -32,5 +33,6 @@ app.use(express.json());
 
 app.use('/api/users', usersRouter);
 app.use('/api/blogs', blogRouter);
+app.use('/api/login', loginRouter);
 
 export default app;

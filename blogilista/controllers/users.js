@@ -25,6 +25,11 @@ usersRouter.post('/', async (req, res) => {
       .json({ error: 'Password is too short, minimum is 3 characters' });
   }
 
+  const existingUsername = await User.findOne({ username: username });
+  if (existingUsername) {
+    return res.status(400).json({ error: 'Username is already taken' });
+  }
+
   const salt = 10;
   const passHash = await bcrypt.hash(password, salt);
 
