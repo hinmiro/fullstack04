@@ -22,8 +22,7 @@ blogRouter.post('/', async (req, res, next) => {
   const { title, author, url, likes } = req.body;
   let decodedToken;
   try {
-    const token = getTokenFrom(req);
-    decodedToken = jwt.verify(token, process.env.SECRET);
+    decodedToken = jwt.verify(req.token, process.env.SECRET);
   } catch (err) {
     return res.status(401).json({ error: 'Malformed or missing token' });
   }

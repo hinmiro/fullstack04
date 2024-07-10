@@ -5,6 +5,7 @@ import blogRouter from './controllers/blogs.js';
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import loginRouter from './controllers/login.js';
+import { tokenExtractor } from './middleware.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ connectMongo().catch((err) => {
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(tokenExtractor);
 
 app.use('/api/users', usersRouter);
 app.use('/api/blogs', blogRouter);
