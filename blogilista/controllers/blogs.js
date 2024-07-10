@@ -1,18 +1,34 @@
-import { Router } from 'express';
+import { request, Router } from 'express';
+import jwt from 'jsonwebtoken';
 import Blog from '../models/blogs.js';
 import User from '../models/user.js';
 
 const blogRouter = Router();
+
+const getTokenFrom = (request) => {
+  const authorization = request.get('authorization');
+  if (authorization && authorization.startsWith('Bearer ', '')) {
+    return authorization.replace('Bearer ', '');
+  }
+  return null;
+};
 
 blogRouter.get('/', async (req, res) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
   res.status(200).json(blogs);
 });
 
-blogRouter.post('/', async (req, res) => {
+blogRouter.post('/', async (req, res, next) => {
   const { title, author, url, likes } = req.body;
+  let decodedToken;
+  try {
+    const token = getTokenFrom(req);
+    decodedToken = jwt.verify(token, process.env.SECRET);
+  } catch (err) {
+    return res.status(401).json({ error: 'Malformed or missing token' });
+  }
 
-  const users = await User.find({});
+  const user = await User.findById(decodedToken.id);
 
   if (!title || !url) {
     return res.sendStatus(400);
@@ -23,19 +39,15 @@ blogRouter.post('/', async (req, res) => {
     author: author,
     url: url,
     likes: likes,
-    user: users[0].id,
+    user: user.id,
   });
   const savedBlog = await blog.save().catch((err) => {
     console.log('Post error: ', err.message);
     return res.sendStatus(400);
   });
   await Blog.find({}).populate('user', { username: 1, name: 1 });
-  const updatedBlogs = users[0].blogs.concat(savedBlog);
-  await User.findByIdAndUpdate(
-    users[0].id,
-    { blogs: updatedBlogs },
-    { new: true },
-  );
+  const updatedBlogs = user.blogs.concat(savedBlog);
+  await User.findByIdAndUpdate(user.id, { blogs: updatedBlogs }, { new: true });
   return res.sendStatus(201);
 });
 
