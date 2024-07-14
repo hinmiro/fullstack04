@@ -1,3 +1,6 @@
+import jwt from 'jsonwebtoken';
+import User from './models/user.js';
+
 const unknownEndpoint = (req, res) => {
   return res.status(404).send({ error: 'Unknown endpoint' });
 };
@@ -27,4 +30,20 @@ const tokenExtractor = (req, res, next) => {
   next();
 };
 
-export { unknownEndpoint, errorHandler, tokenExtractor };
+const userExtractor = async (req, res, next) => {
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(req.token, process.env.SECRET);
+  } catch (err) {
+    return res.status(401).json({ error: 'Token is missing of malformed' });
+  }
+
+  const user = await User.findById(decodedToken.id);
+  if (user) {
+    req.user = user;
+  }
+
+  next();
+};
+
+export { unknownEndpoint, errorHandler, tokenExtractor, userExtractor };

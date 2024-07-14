@@ -5,7 +5,7 @@ import blogRouter from './controllers/blogs.js';
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import loginRouter from './controllers/login.js';
-import { tokenExtractor } from './middleware.js';
+import { tokenExtractor, userExtractor } from './middleware.js';
 
 const app = express();
 

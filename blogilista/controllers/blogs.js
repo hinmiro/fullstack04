@@ -2,6 +2,7 @@ import { request, Router } from 'express';
 import jwt from 'jsonwebtoken';
 import Blog from '../models/blogs.js';
 import User from '../models/user.js';
+import { userExtractor } from '../middleware.js';
 
 const blogRouter = Router();
 
@@ -18,16 +19,16 @@ blogRouter.get('/', async (req, res) => {
   res.status(200).json(blogs);
 });
 
-blogRouter.post('/', async (req, res, next) => {
+blogRouter.post('/', userExtractor, async (req, res, next) => {
   const { title, author, url, likes } = req.body;
-  let decodedToken;
+  /*let decodedToken;
   try {
     decodedToken = jwt.verify(req.token, process.env.SECRET);
   } catch (err) {
     return res.status(401).json({ error: 'Malformed or missing token' });
-  }
+  }*/
 
-  const user = await User.findById(decodedToken.id);
+  const user = req.user;
 
   if (!title || !url) {
     return res.sendStatus(400);
@@ -50,29 +51,25 @@ blogRouter.post('/', async (req, res, next) => {
   return res.sendStatus(201);
 });
 
-blogRouter.delete('/:id', async (req, res) => {
+blogRouter.delete('/:id', userExtractor, async (req, res) => {
   const id = req.params.id;
-  let decodedToken;
-  try {
-    decodedToken = jwt.verify(req.token, process.env.SECRET);
-  } catch (err) {
-    return res.status(401).json({ error: 'Malformed or missing token' });
-  }
 
-  const user = await User.findById(decodedToken.id).catch((err) => {
-    console.log('User not found');
-    return res.status(401).json({ error: 'User not found' });
-  });
+  let blogFound = false;
+  const user = req.user;
+  console.log(user);
 
   for (const blog of user.blogs) {
     if (blog.toString() === id) {
       await Blog.findByIdAndDelete(id);
-      return res.status(200).json({ message: 'Delete success' });
-    } else {
-      return res
-        .status(400)
-        .json({ error: 'No such blog found from database' });
+      blogFound = true;
+      break;
     }
+  }
+
+  if (!blogFound) {
+    return res.status(400).json({ error: 'No such blog found from database' });
+  } else {
+    return res.status(200).json({ message: 'Delete success' });
   }
 });
 
