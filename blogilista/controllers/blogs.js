@@ -52,12 +52,28 @@ blogRouter.post('/', async (req, res, next) => {
 
 blogRouter.delete('/:id', async (req, res) => {
   const id = req.params.id;
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(req.token, process.env.SECRET);
+  } catch (err) {
+    return res.status(401).json({ error: 'Malformed or missing token' });
+  }
 
-  await Blog.findByIdAndDelete(id).catch((err) => {
-    console.log('Delete error: ', err.message);
-    return res.sendStatus(400);
+  const user = await User.findById(decodedToken.id).catch((err) => {
+    console.log('User not found');
+    return res.status(401).json({ error: 'User not found' });
   });
-  return res.sendStatus(200);
+
+  for (const blog of user.blogs) {
+    if (blog.toString() === id) {
+      await Blog.findByIdAndDelete(id);
+      return res.status(200).json({ message: 'Delete success' });
+    } else {
+      return res
+        .status(400)
+        .json({ error: 'No such blog found from database' });
+    }
+  }
 });
 
 blogRouter.put('/:id', async (req, res) => {
