@@ -1,4 +1,4 @@
-import { test, after, before } from 'node:test';
+import { test, after, before, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import mongoose from 'mongoose';
 import supertest from 'supertest';
@@ -8,7 +8,6 @@ process.env.NODE_ENV = 'test';
 import app from '../app.js';
 import Blog from '../models/blogs.js';
 import User from '../models/user.js';
-import Users from '../controllers/users.js';
 
 const api = supertest(app);
 
@@ -57,7 +56,33 @@ test('blog identify field is id, not_id', async () => {
   );
 });
 
+test('create new blog without token', async () => {
+  const blog = {
+    title: 'test',
+    author: 'tester',
+    url: 'www.testing.ww',
+    likes: 69,
+  };
+
+  await api.post('/api/blogs').send(blog).expect(401);
+});
+
 test('newly created blog is in database', async () => {
+  const newUser = {
+    username: 'Testeri',
+    name: 'TESTER',
+    password: '666',
+  };
+
+  const log = await api.post('/api/users').send(newUser).expect(201);
+
+  const login = await api
+    .post('/api/login')
+    .send({ username: 'Testeri', password: '666' })
+    .expect(200);
+
+  const token = login.body.token;
+
   const blog = {
     title: 'test',
     author: 'tester',
@@ -66,7 +91,11 @@ test('newly created blog is in database', async () => {
   };
 
   const blogsLen = await Blog.countDocuments();
-  await api.post('/api/blogs').send(blog).expect(201);
+  await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
+    .send(blog)
+    .expect(201);
   const newLen = await Blog.countDocuments();
 
   assert.strictEqual(
@@ -74,29 +103,115 @@ test('newly created blog is in database', async () => {
     blogsLen + 1,
     'Test failed, blog is not in database',
   );
+
+  after(async () => {
+    await User.findByIdAndDelete(log._body.id);
+  });
 });
 
 test('if blog has no likes it should be 0', async () => {
+  const newUser = {
+    username: 'Testeri',
+    name: 'TESTER',
+    password: '666',
+  };
+
+  const log = await api.post('/api/users').send(newUser).expect(201);
+
+  const login = await api
+    .post('/api/login')
+    .send({ username: 'Testeri', password: '666' })
+    .expect(200);
+
+  const token = login.body.token;
+
   const blog = {
     title: 'Pallot',
     author: 'Käpytikka',
     url: 'www.ballllzlzz.xyz',
   };
 
-  const result = await api.post('/api/blogs').send(blog).expect(201);
+  const result = await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
+    .send(blog)
+    .expect(201);
+
+  after(async () => {
+    await User.findByIdAndDelete(log._body.id);
+  });
 });
 
 test('If new blog has no title or url, send 400 Bad request', async () => {
+  const newUser = {
+    username: 'Testeri',
+    name: 'TESTER',
+    password: '666',
+  };
+
+  const log = await api.post('/api/users').send(newUser).expect(201);
+
+  const login = await api
+    .post('/api/login')
+    .send({ username: 'Testeri', password: '666' })
+    .expect(200);
+
+  const token = login.body.token;
   const blog = new Blog({ author: 'Banaani', url: 'www.www.ww' });
-  await api.post('/api/blogs').send(blog).expect(400);
+  await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
+    .send(blog)
+    .expect(400);
+
+  after(async () => {
+    await User.findByIdAndDelete(log._body.id);
+  });
 });
 
 test('delete blog actually deletes blog', async () => {
+  const newUser = {
+    username: 'Testeri',
+    name: 'TESTER',
+    password: '666',
+  };
+
+  const log = await api.post('/api/users').send(newUser).expect(201);
+
+  const login = await api
+    .post('/api/login')
+    .send({ username: 'Testeri', password: '666' })
+    .expect(200);
+
+  const token = login.body.token;
+
+  const newBlog = {
+    title: 'kokeilu',
+    author: 'lija',
+    url: 'www.kokkkokokoo.ww',
+    likes: 6,
+  };
+
   const blogsLen = await Blog.countDocuments();
-  const blogs = await api.get('/api/blogs').expect(200);
-  await api.delete(`/api/blogs/${blogs._body[blogsLen - 1].id}`).expect(200);
+
+  const blog = await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
+    .send(newBlog)
+    .expect(201);
+
+  const allBlogs = await api.get('/api/blogs').expect(200);
+
+  await api
+    .delete(`/api/blogs/${allBlogs._body[allBlogs._body.length - 1].id}`)
+    .set('Authorization', `Bearer ${token}`)
+    .expect(200);
   const newLen = await Blog.countDocuments();
-  assert.strictEqual(newLen, blogsLen - 1, 'Deleting blog is faulty');
+  assert.strictEqual(newLen, blogsLen, 'Deleting blog is faulty');
+
+  after(async () => {
+    await User.findByIdAndDelete(log._body.id);
+  });
 });
 
 test('adding likes to blog', async () => {
