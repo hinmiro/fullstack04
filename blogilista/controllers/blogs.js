@@ -25,7 +25,7 @@ blogRouter.get('/:id', async (req, res) => {
 });
 
 blogRouter.post('/', userExtractor, async (req, res, next) => {
-  const { title, author, url, likes } = req.body;
+  const { title, author, url } = req.body;
 
   const user = req.user;
 
@@ -37,7 +37,7 @@ blogRouter.post('/', userExtractor, async (req, res, next) => {
     title: title,
     author: author,
     url: url,
-    likes: likes,
+    likes: 0,
     user: user.id,
   });
   const savedBlog = await blog.save().catch((err) => {
