@@ -19,6 +19,11 @@ blogRouter.get('/', async (req, res) => {
   res.status(200).json(blogs);
 });
 
+blogRouter.get('/:id', async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  res.status(200).json(blog);
+});
+
 blogRouter.post('/', userExtractor, async (req, res, next) => {
   const { title, author, url, likes } = req.body;
 
@@ -42,7 +47,7 @@ blogRouter.post('/', userExtractor, async (req, res, next) => {
   await Blog.find({}).populate('user', { username: 1, name: 1 });
   const updatedBlogs = user.blogs.concat(savedBlog);
   await User.findByIdAndUpdate(user.id, { blogs: updatedBlogs }, { new: true });
-  return res.sendStatus(201);
+  return res.status(201).json(savedBlog);
 });
 
 blogRouter.delete('/:id', userExtractor, async (req, res) => {
@@ -69,15 +74,27 @@ blogRouter.delete('/:id', userExtractor, async (req, res) => {
 
 blogRouter.put('/:id', async (req, res) => {
   const id = req.params.id;
-  const { likes } = req.body;
 
-  await Blog.findByIdAndUpdate(id, { likes: likes }, { new: true }).catch(
-    (err) => {
-      console.log('Error has occured: ', err.message);
-      return res.sendStatus(400);
-    },
-  );
-  return res.sendStatus(200);
+  const likes = req.body.likes !== undefined ? req.body.likes + 1 : 0;
+  if (typeof likes !== 'number' || likes < 0) {
+    return res.status(400).json({ error: 'Invalid likes value' });
+  }
+
+  try {
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      id,
+      { likes: likes },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedBlog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    return res.status(200).json(updatedBlog);
+  } catch (err) {
+    console.log('Error occurred: ', err.message);
+  }
 });
 
 export default blogRouter;
