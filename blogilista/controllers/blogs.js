@@ -55,7 +55,6 @@ blogRouter.delete('/:id', userExtractor, async (req, res) => {
 
   let blogFound = false;
   const user = req.user;
-  console.log(user);
 
   for (const blog of user.blogs) {
     if (blog.toString() === id) {
