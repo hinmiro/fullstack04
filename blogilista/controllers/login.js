@@ -29,6 +29,7 @@ loginRouter.post('/', async (req, res) => {
     username: user.username,
     name: user.name,
     blogs: user.blogs,
+    id: user.id,
   });
 });
 
