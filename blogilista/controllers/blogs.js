@@ -25,7 +25,7 @@ blogRouter.get('/:id', async (req, res) => {
 });
 
 blogRouter.post('/', userExtractor, async (req, res, next) => {
-  const { title, author, url } = req.body;
+  const { title, url } = req.body;
 
   const user = req.user;
 
@@ -35,7 +35,6 @@ blogRouter.post('/', userExtractor, async (req, res, next) => {
 
   const blog = new Blog({
     title: title,
-    author: author,
     url: url,
     likes: 0,
     user: user.id,
