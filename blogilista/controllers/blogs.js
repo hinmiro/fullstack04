@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import Blog from '../models/blogs.js';
 import User from '../models/user.js';
 import { userExtractor } from '../middleware.js';
+import Blogs from '../models/blogs.js';
+import * as http from 'node:http';
 
 const blogRouter = Router();
 
@@ -37,7 +39,7 @@ blogRouter.post('/', userExtractor, async (req, res, next) => {
     title: title,
     url: url,
     likes: 0,
-    user: user.id,
+    user: user.id
   });
   const savedBlog = await blog.save().catch((err) => {
     console.log('Post error: ', err.message);
@@ -82,7 +84,7 @@ blogRouter.put('/:id', async (req, res) => {
     const updatedBlog = await Blog.findByIdAndUpdate(
       id,
       { likes: likes },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true }
     );
 
     if (!updatedBlog) {
@@ -92,6 +94,24 @@ blogRouter.put('/:id', async (req, res) => {
     return res.status(200).json(updatedBlog);
   } catch (err) {
     console.log('Error occurred: ', err.message);
+  }
+});
+
+blogRouter.post('/:id/comment', async (req, res) => {
+  const { comment } = req.body;
+  const id = req.params.id;
+
+  try {
+    const blog = await Blogs.findByIdAndUpdate(
+      id,
+      { $push: { comments: req.body.comment } },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json(blog);
+  } catch (err) {
+    console.log('Error: ', err.message);
+    return res.status(400).json('Error happened');
   }
 });
 
